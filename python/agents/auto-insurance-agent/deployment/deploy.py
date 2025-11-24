@@ -12,14 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+import sys
 import os
 
+# Add the project root to sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 import vertexai
-from auto_insurance_agent.agent import root_agent
-from dotenv import load_dotenv, set_key
 from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
+from auto_insurance_agent.agent import root_agent
+import logging
+import os
+from dotenv import set_key, load_dotenv
 
 load_dotenv()
 
@@ -38,7 +45,6 @@ vertexai.init(
     staging_bucket=STAGING_BUCKET,
 )
 
-
 # Function to update the .env file
 def update_env_file(agent_engine_id, env_file_path):
     """Updates the .env file with the agent engine ID."""
@@ -47,7 +53,6 @@ def update_env_file(agent_engine_id, env_file_path):
         print(f"Updated AGENT_ENGINE_ID in {env_file_path} to {agent_engine_id}")
     except Exception as e:
         print(f"Error updating .env file: {e}")
-
 
 logger.info("deploying app...")
 
@@ -65,7 +70,7 @@ remote_app = agent_engines.create(
         "google-cloud-aiplatform[adk,agent-engines]>=1.100.0,<2.0.0",
         "google-adk>=1.5.0,<2.0.0",
         "python-dotenv",
-        "google-cloud-secret-manager",
+        "google-cloud-secret-manager"
     ],
     extra_packages=[
         "./auto_insurance_agent",
@@ -73,9 +78,7 @@ remote_app = agent_engines.create(
 )
 
 # log remote_app
-logging.info(
-    f"Deployed agent to Vertex AI Agent Engine successfully, resource name: {remote_app.resource_name}"
-)
+logging.info(f"Deployed agent to Vertex AI Agent Engine successfully, resource name: {remote_app.resource_name}")
 
 # Update the .env file with the new Agent Engine ID
 update_env_file(remote_app.resource_name, ENV_FILE_PATH)
