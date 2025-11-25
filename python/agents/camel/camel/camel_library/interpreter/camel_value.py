@@ -1771,7 +1771,7 @@ class CaMeLFunction(Generic[_T], CaMeLCallable[_T]):
         }
 
 
-class UndefinedClassError(Exception): ...  # noqa: E704
+class UndefinedClassError(Exception): ...
 
 
 def value_from_raw(
