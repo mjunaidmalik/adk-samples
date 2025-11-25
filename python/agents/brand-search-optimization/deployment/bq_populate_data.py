@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud import bigquery
-
 from brand_search_optimization.shared_libraries import constants
+from google.cloud import bigquery
 
 PROJECT = constants.PROJECT
 TABLE_ID = constants.TABLE_ID
@@ -79,11 +78,7 @@ def populate_bigquery_table():
     client.delete_table(table_id, not_found_ok=True)  # Make an API request.
     print("Deleted table '{}'.".format(table_id))
     table = client.create_table(table)  # Make an API request.
-    print(
-        "Created table {}.{}.{}".format(
-            PROJECT, table.dataset_id, table.table_id
-        )
-    )
+    print("Created table {}.{}.{}".format(PROJECT, table.dataset_id, table.table_id))
 
     errors = client.insert_rows_json(table=table, json_rows=data_to_insert)
 
