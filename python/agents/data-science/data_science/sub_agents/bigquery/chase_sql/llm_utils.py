@@ -24,8 +24,11 @@ from typing import Callable, List, Optional
 import dotenv
 import vertexai
 from google.cloud import aiplatform
-from vertexai.generative_models import (GenerationConfig, HarmBlockThreshold,
-                                        HarmCategory)
+from vertexai.generative_models import (
+    GenerationConfig,
+    HarmBlockThreshold,
+    HarmCategory,
+)
 from vertexai.preview import caching
 from vertexai.preview.generative_models import GenerativeModel
 

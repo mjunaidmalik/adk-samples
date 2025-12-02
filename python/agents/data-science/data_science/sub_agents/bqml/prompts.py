@@ -130,7 +130,7 @@ def return_instructions_bqml() -> str:
         * Only run the execute_bqml_code tool once the user verified the code. NEVER USE `execute_bqml_code` BEFORE VERIFYING WITH THE USER!!
         * Make sure you use the database and project ID that is provided to you in the context!!
         * Be efficient. You have a output token limit, so make sure your BQML Code is efficient enough to stay in that limit.
-        * Note: never route back to the parent agent, except when the user explicitly prompts for it. 
+        * Note: never route back to the parent agent, except when the user explicitly prompts for it.
 
 
     </CONTEXT>

@@ -18,13 +18,14 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from ...utils.utils import get_env_var, USER_AGENT
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools import BaseTool, ToolContext
 from google.adk.tools.bigquery import BigQueryToolset
 from google.adk.tools.bigquery.config import BigQueryToolConfig, WriteMode
 from google.genai import types
+
+from ...utils.utils import USER_AGENT, get_env_var
 from . import tools
 from .chase_sql import chase_db_tools
 from .prompts import return_instructions_bigquery
@@ -42,9 +43,7 @@ def setup_before_agent_call(callback_context: CallbackContext) -> None:
     """Setup the agent."""
 
     if "database_settings" not in callback_context.state:
-        callback_context.state["database_settings"] = (
-            tools.get_database_settings()
-        )
+        callback_context.state["database_settings"] = tools.get_database_settings()
 
 
 def store_results_in_context(

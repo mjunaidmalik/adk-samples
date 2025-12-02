@@ -22,10 +22,9 @@ import sqlglot
 import sqlglot.optimizer
 
 from ..llm_utils import GeminiModel  # pylint: disable=g-importing-member
-from .correction_prompt_template import (
+from .correction_prompt_template import (  # pylint: disable=g-importing-member
     CORRECTION_PROMPT_TEMPLATE_V1_0,
-)  # pylint: disable=g-importing-member
-
+)
 
 ColumnSchemaType = tuple[str, str]
 AllColumnsSchemaType = list[ColumnSchemaType]
