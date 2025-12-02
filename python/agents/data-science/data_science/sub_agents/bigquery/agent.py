@@ -25,7 +25,7 @@ from google.adk.tools.bigquery import BigQueryToolset
 from google.adk.tools.bigquery.config import BigQueryToolConfig, WriteMode
 from google.genai import types
 
-from ...utils.utils import USER_AGENT, get_env_var
+from ...utils.utils import USER_AGENT
 from . import tools
 from .chase_sql import chase_db_tools
 from .prompts import return_instructions_bigquery

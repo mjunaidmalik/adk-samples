@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import time
 
 from google.cloud import bigquery
 from vertexai import rag

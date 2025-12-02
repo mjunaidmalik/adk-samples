@@ -27,7 +27,6 @@ from google.cloud import bigquery
 from google.genai import Client
 from google.genai.types import HttpOptions
 
-from ...utils.utils import USER_AGENT
 from .chase_sql import chase_constants
 
 logger = logging.getLogger(__name__)
