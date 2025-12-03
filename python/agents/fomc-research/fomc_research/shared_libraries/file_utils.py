@@ -15,7 +15,6 @@
 """File-related utility functions for fed_research_agent."""
 
 import base64
-import binascii
 import io
 import logging
 import mimetypes
