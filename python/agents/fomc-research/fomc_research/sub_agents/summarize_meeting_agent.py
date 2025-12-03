@@ -24,9 +24,7 @@ from . import summarize_meeting_agent_prompt
 SummarizeMeetingAgent = Agent(
     name="summarize_meeting_agent",
     model=MODEL,
-    description=(
-        "Summarize the content and sentiment of the latest FOMC meeting."
-    ),
+    description=("Summarize the content and sentiment of the latest FOMC meeting."),
     instruction=summarize_meeting_agent_prompt.PROMPT,
     tools=[
         store_state_tool,

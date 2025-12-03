@@ -43,18 +43,10 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
     load_dotenv()
 
     project_id = (
-        FLAGS.project_id
-        if FLAGS.project_id
-        else os.getenv("GOOGLE_CLOUD_PROJECT")
+        FLAGS.project_id if FLAGS.project_id else os.getenv("GOOGLE_CLOUD_PROJECT")
     )
-    location = (
-        FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION")
-    )
-    bucket = (
-        FLAGS.bucket
-        if FLAGS.bucket
-        else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
-    )
+    location = FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION")
+    bucket = FLAGS.bucket if FLAGS.bucket else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
 
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("GOOGLE_CLOUD_LOCATION")
@@ -67,9 +59,7 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
         print("Missing required environment variable: GOOGLE_CLOUD_LOCATION")
         return
     elif not bucket:
-        print(
-            "Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET"
-        )
+        print("Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET")
         return
 
     vertexai.init(
@@ -79,9 +69,10 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
     )
 
     session_service = VertexAiSessionService(project_id, location)
-    session = asyncio.run(session_service.create_session(
-        app_name=FLAGS.resource_id,
-        user_id=FLAGS.user_id)
+    session = asyncio.run(
+        session_service.create_session(
+            app_name=FLAGS.resource_id, user_id=FLAGS.user_id
+        )
     )
 
     agent = agent_engines.get(FLAGS.resource_id)
@@ -95,9 +86,7 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
             break
 
         for event in agent.stream_query(
-            user_id=FLAGS.user_id,
-            session_id=session.id,
-            message=user_input
+            user_id=FLAGS.user_id, session_id=session.id, message=user_input
         ):
             if "content" in event:
                 if "parts" in event["content"]:
@@ -107,11 +96,11 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
                             text_part = part["text"]
                             print(f"Response: {text_part}")
 
-    asyncio.run(session_service.delete_session(
-        app_name=FLAGS.resource_id,
-        user_id=FLAGS.user_id,
-        session_id=session.id
-    ))
+    asyncio.run(
+        session_service.delete_session(
+            app_name=FLAGS.resource_id, user_id=FLAGS.user_id, session_id=session.id
+        )
+    )
     print(f"Deleted session for user ID: {FLAGS.user_id}")
 
 
