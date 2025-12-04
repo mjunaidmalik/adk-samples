@@ -1,14 +1,15 @@
-from datetime import datetime
 import os
+from datetime import datetime
+
 from google import genai
-from google.genai import types
 from google.adk.tools import ToolContext
 from google.cloud import storage
+from google.genai import types
+
 from .... import config
 
-
 client = genai.Client(
-    vertexai=True, project=os.environ.get("GOOGLE_CLOUD_PROJECT"),location="global"
+    vertexai=True, project=os.environ.get("GOOGLE_CLOUD_PROJECT"), location="global"
 )
 
 
