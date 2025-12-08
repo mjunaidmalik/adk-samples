@@ -16,11 +16,10 @@
 
 import os
 
-from absl import app
-from absl import flags
+import vertexai
+from absl import app, flags
 from dotenv import load_dotenv
 from llm_auditor.agent import root_agent
-import vertexai
 from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
 
@@ -63,30 +62,26 @@ def delete(resource_id: str) -> None:
 
 def list_agents() -> None:
     remote_agents = agent_engines.list()
-    TEMPLATE = '''
+    TEMPLATE = """
 {agent.name} ("{agent.display_name}")
 - Create time: {agent.create_time}
 - Update time: {agent.update_time}
-'''
-    remote_agents_string = '\n'.join(TEMPLATE.format(agent=agent) for agent in remote_agents)
+"""
+    remote_agents_string = "\n".join(
+        TEMPLATE.format(agent=agent) for agent in remote_agents
+    )
     print(f"All remote agents:\n{remote_agents_string}")
+
 
 def main(argv: list[str]) -> None:
     del argv  # unused
     load_dotenv()
 
     project_id = (
-        FLAGS.project_id
-        if FLAGS.project_id
-        else os.getenv("GOOGLE_CLOUD_PROJECT")
+        FLAGS.project_id if FLAGS.project_id else os.getenv("GOOGLE_CLOUD_PROJECT")
     )
-    location = (
-        FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION")
-    )
-    bucket = (
-        FLAGS.bucket if FLAGS.bucket
-        else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
-    )
+    location = FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION")
+    bucket = FLAGS.bucket if FLAGS.bucket else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
 
     print(f"PROJECT: {project_id}")
     print(f"LOCATION: {location}")
@@ -99,9 +94,7 @@ def main(argv: list[str]) -> None:
         print("Missing required environment variable: GOOGLE_CLOUD_LOCATION")
         return
     elif not bucket:
-        print(
-            "Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET"
-        )
+        print("Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET")
         return
 
     vertexai.init(
