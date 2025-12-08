@@ -1,25 +1,26 @@
 """Refinement agent for Machine Learning Engineering."""
 
-import os
-import json
-from typing import Optional
 import functools
+import json
+import os
+from typing import Optional
 
-from google.adk.agents import callback_context as callback_context_module
-from google.adk.models import llm_response as llm_response_module
-from google.adk.models import llm_request as llm_request_module
 from google.adk import agents
+from google.adk.agents import callback_context as callback_context_module
+from google.adk.models import llm_request as llm_request_module
+from google.adk.models import llm_response as llm_response_module
 from google.genai import types
-
+from machine_learning_engineering.shared_libraries import (
+    check_leakage_util,
+    common_util,
+    config,
+    debug_util,
+)
 from machine_learning_engineering.sub_agents.refinement import prompt
-from machine_learning_engineering.shared_libraries import debug_util
-from machine_learning_engineering.shared_libraries import check_leakage_util
-from machine_learning_engineering.shared_libraries import common_util
-from machine_learning_engineering.shared_libraries import config
 
 
 def update_inner_loop_states(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Updates inner loop states."""
     task_id = callback_context.agent_name.split("_")[-1]
@@ -28,7 +29,7 @@ def update_inner_loop_states(
 
 
 def update_outer_loop_states(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Updates outer loop states."""
     task_id = callback_context.agent_name.split("_")[-1]
@@ -38,9 +39,7 @@ def update_outer_loop_states(
     lower = callback_context.state.get("lower", True)
     inner_loop_round = callback_context.state.get("inner_loop_round", 2)
     run_cwd = os.path.join(workspace_dir, task_name, task_id)
-    prev_solution = callback_context.state.get(
-        f"train_code_{step}_{task_id}", ""
-    )
+    prev_solution = callback_context.state.get(f"train_code_{step}_{task_id}", "")
     prev_exec_result = callback_context.state.get(
         f"train_code_exec_result_{step}_{task_id}", {}
     )
@@ -52,18 +51,16 @@ def update_outer_loop_states(
         if lower:
             improvement = prev_exec_result["score"] - exec_result["score"]
         else:
-            improvement = exec_result["score"] - prev_exec_result["score"] 
+            improvement = exec_result["score"] - prev_exec_result["score"]
         improvements.append(improvement)
     best_improvement = max(improvements)
     best_idx = improvements.index(best_improvement)
     output_filepath = os.path.join(run_cwd, f"train{step+1}.py")
     if best_improvement <= 0.0:
-        callback_context.state[
-            f"train_code_{step+1}_{task_id}"
-        ] = prev_solution
-        callback_context.state[
-            f"train_code_exec_result_{step+1}_{task_id}"
-        ] = prev_exec_result
+        callback_context.state[f"train_code_{step+1}_{task_id}"] = prev_solution
+        callback_context.state[f"train_code_exec_result_{step+1}_{task_id}"] = (
+            prev_exec_result
+        )
         with open(output_filepath, "w", encoding="utf-8") as f:
             f.write(prev_solution)
     else:
@@ -73,20 +70,16 @@ def update_outer_loop_states(
         best_exec_result = callback_context.state.get(
             f"train_code_improve_exec_result_{best_idx}_{step}_{task_id}", {}
         )
-        callback_context.state[
-            f"train_code_{step+1}_{task_id}"
-        ] = best_solution
-        callback_context.state[
-            f"train_code_exec_result_{step+1}_{task_id}"
-        ] = best_exec_result
+        callback_context.state[f"train_code_{step+1}_{task_id}"] = best_solution
+        callback_context.state[f"train_code_exec_result_{step+1}_{task_id}"] = (
+            best_exec_result
+        )
         with open(output_filepath, "w", encoding="utf-8") as f:
             f.write(best_solution)
     ablation_results = callback_context.state.get(
         f"ablation_summary_{step}_{task_id}", ""
     )
-    code_block = callback_context.state.get(
-        f"refine_code_block_{step}_{task_id}", ""
-    )
+    code_block = callback_context.state.get(f"refine_code_block_{step}_{task_id}", "")
     callback_context.state[f"prev_ablations_{task_id}"].append(ablation_results)
     callback_context.state[f"prev_code_blocks_{task_id}"].append(code_block)
     callback_context.state[f"refine_step_{task_id}"] += 1
@@ -94,7 +87,7 @@ def update_outer_loop_states(
 
 
 def init_inner_loop_states(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Initializes inner loop states."""
     task_id = callback_context.agent_name.split("_")[-1]
@@ -103,7 +96,7 @@ def init_inner_loop_states(
 
 
 def init_outer_loop_states(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Initializes outer loop states."""
     task_id = callback_context.agent_name.split("_")[-1]
@@ -111,6 +104,7 @@ def init_outer_loop_states(
     callback_context.state[f"prev_ablations_{task_id}"] = []
     callback_context.state[f"prev_code_blocks_{task_id}"] = []
     return None
+
 
 def get_ablation_agent_instruction(
     context: callback_context_module.ReadonlyContext,
@@ -191,8 +185,10 @@ def get_plan_refinement_instruction(
         if lower:
             improvement = prev_exec_result["score"] - exec_result["score"]
         else:
-            improvement = exec_result["score"] - prev_exec_result["score"] 
-        score_plan_time_list.append((improvement, curr_plan, exec_result["execution_time"]))
+            improvement = exec_result["score"] - prev_exec_result["score"]
+        score_plan_time_list.append(
+            (improvement, curr_plan, exec_result["execution_time"])
+        )
     num_top_plans = context.state.get("num_top_plans", 3)
     score_plan_time_list.sort(key=lambda x: x[0], reverse=True)
     prev_plan_summary = ""
@@ -229,7 +225,9 @@ def check_ablation_finish(
     task_id = callback_context.agent_name.split("_")[-1]
     callback_context.state[f"ablation_skip_data_leakage_check_{task_id}"] = True
     step = callback_context.state.get(f"refine_step_{task_id}", 0)
-    result_dict = callback_context.state.get(f"ablation_code_exec_result_{step}_{task_id}", {})
+    result_dict = callback_context.state.get(
+        f"ablation_code_exec_result_{step}_{task_id}", {}
+    )
     if result_dict.get("returncode", 1) == 0:
         return llm_response_module.LlmResponse()
     callback_context.state[f"ablation_skip_data_leakage_check_{task_id}"] = False
@@ -293,7 +291,7 @@ def get_plan_and_code_block(
     start_idx = response_text.find("[")
     end_idx = response_text.rfind("]") + 1
     try:
-        result = json.loads(response_text[start_idx: end_idx])[0]
+        result = json.loads(response_text[start_idx:end_idx])[0]
         plan = result["plan"]
         code_block = result["code_block"].replace("```python", "").replace("```", "")
     except Exception:

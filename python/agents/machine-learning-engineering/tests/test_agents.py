@@ -1,21 +1,19 @@
 """Test cases for the Machine Learning Engineering agent and its sub-agents."""
 
-
-import dotenv
 import os
 import sys
-import pytest
 import textwrap
 import unittest
 
+import dotenv
+import pytest
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from google.genai import types
 from google.adk.artifacts import InMemoryArtifactService
-from google.adk.runners import Runner
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import InMemoryRunner, Runner
 from google.adk.sessions import InMemorySessionService
-
+from google.genai import types
 from machine_learning_engineering.agent import root_agent
 
 session_service = InMemorySessionService()
@@ -56,6 +54,7 @@ async def test_happy_path():
 
     # The correct answer should mention 'machine learning'.
     assert "machine learning" in response.lower()
+
 
 if __name__ == "__main__":
     unittest.main()

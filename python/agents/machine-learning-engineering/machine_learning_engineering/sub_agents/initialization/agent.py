@@ -1,23 +1,24 @@
 """Initialization agent for Machine Learning Engineering."""
 
-from typing import Optional
+import ast
 import dataclasses
 import os
 import shutil
 import time
-import ast
+from typing import Optional
 
 from google.adk import agents
 from google.adk.agents import callback_context as callback_context_module
-from google.adk.models import llm_response as llm_response_module
 from google.adk.models import llm_request as llm_request_module
-from google.genai import types
+from google.adk.models import llm_response as llm_response_module
 from google.adk.tools.google_search_tool import google_search
-
+from google.genai import types
+from machine_learning_engineering.shared_libraries import (
+    common_util,
+    config,
+    debug_util,
+)
 from machine_learning_engineering.sub_agents.initialization import prompt
-from machine_learning_engineering.shared_libraries import debug_util
-from machine_learning_engineering.shared_libraries import common_util
-from machine_learning_engineering.shared_libraries import config
 
 
 def get_model_candidates(
@@ -28,11 +29,11 @@ def get_model_candidates(
     task_id = callback_context.agent_name.split("_")[-1]
     workspace_dir = callback_context.state.get("workspace_dir", "")
     task_name = callback_context.state.get("task_name", "")
-    num_model_candidates = callback_context.state.get("num_model_candidates", 2) 
+    num_model_candidates = callback_context.state.get("num_model_candidates", 2)
     run_cwd = os.path.join(workspace_dir, task_name, task_id)
     try:
         response_text = common_util.get_text_from_response(llm_response)
-        start_idx, end_idx = response_text.find("["), response_text.rfind("]")+1
+        start_idx, end_idx = response_text.find("["), response_text.rfind("]") + 1
         result = response_text[start_idx:end_idx]
         models = ast.literal_eval(result)[:num_model_candidates]
         for j, model in enumerate(models):
@@ -47,7 +48,9 @@ def get_model_candidates(
                 "example_code": model["example_code"],
                 "model_description": model_description,
             }
-            with open(os.path.join(run_cwd, "model_candidates", f"model_{j+1}.txt"), "w") as f:
+            with open(
+                os.path.join(run_cwd, "model_candidates", f"model_{j+1}.txt"), "w"
+            ) as f:
                 f.write(model_description)
         callback_context.state[f"init_{task_id}_model_finish"] = True
     except:
@@ -89,13 +92,19 @@ def check_model_eval_finish(
         f"init_{task_id}_model_{model_id}",
         {},
     ).get("model_description", "")
-    callback_context.state[f"model_eval_skip_data_leakage_check_{task_id}_{model_id}"] = True
+    callback_context.state[
+        f"model_eval_skip_data_leakage_check_{task_id}_{model_id}"
+    ] = True
     if not model_description:
         return llm_response_module.LlmResponse()
-    result_dict = callback_context.state.get(f"init_code_exec_result_{task_id}_{model_id}", {})
+    result_dict = callback_context.state.get(
+        f"init_code_exec_result_{task_id}_{model_id}", {}
+    )
     if result_dict:
         return llm_response_module.LlmResponse()
-    callback_context.state[f"model_eval_skip_data_leakage_check_{task_id}_{model_id}"] = False
+    callback_context.state[
+        f"model_eval_skip_data_leakage_check_{task_id}_{model_id}"
+    ] = False
     return None
 
 
@@ -106,11 +115,17 @@ def check_merger_finish(
     """Checks if the code integration is finished."""
     reference_idx = callback_context.agent_name.split("_")[-1]
     task_id = callback_context.agent_name.split("_")[-2]
-    result_dict = callback_context.state.get(f"merger_code_exec_result_{task_id}_{reference_idx}", {})
-    callback_context.state[f"merger_skip_data_leakage_check_{task_id}_{reference_idx}"] = True
+    result_dict = callback_context.state.get(
+        f"merger_code_exec_result_{task_id}_{reference_idx}", {}
+    )
+    callback_context.state[
+        f"merger_skip_data_leakage_check_{task_id}_{reference_idx}"
+    ] = True
     if result_dict:
         return llm_response_module.LlmResponse()
-    callback_context.state[f"merger_skip_data_leakage_check_{task_id}_{reference_idx}"] = False
+    callback_context.state[
+        f"merger_skip_data_leakage_check_{task_id}_{reference_idx}"
+    ] = False
     return None
 
 
@@ -120,7 +135,9 @@ def skip_data_use_check(
 ) -> Optional[llm_response_module.LlmResponse]:
     """Skips the data use check if the code is not changed."""
     task_id = callback_context.agent_name.split("_")[-1]
-    check_data_use_finish = callback_context.state.get(f"check_data_use_finish_{task_id}", False)
+    check_data_use_finish = callback_context.state.get(
+        f"check_data_use_finish_{task_id}", False
+    )
     if check_data_use_finish:
         return llm_response_module.LlmResponse()
     result_dict = callback_context.state.get(f"train_code_exec_result_0_{task_id}", {})
@@ -132,7 +149,7 @@ def skip_data_use_check(
 
 
 def rank_candidate_solutions(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Ranks the candidate solutions based on their scores."""
     workspace_dir = callback_context.state.get("workspace_dir", "")
@@ -149,14 +166,20 @@ def rank_candidate_solutions(
         )
         if init_code_exec_result:
             performance_results.append(
-                (init_code_exec_result.get("score", 0.0), init_code, init_code_exec_result)
+                (
+                    init_code_exec_result.get("score", 0.0),
+                    init_code,
+                    init_code_exec_result,
+                )
             )
     if callback_context.state.get("lower", True):
         performance_results.sort(key=lambda x: x[0])
     else:
         performance_results.sort(key=lambda x: x[0], reverse=True)
     best_score = performance_results[0][0]
-    base_solution = performance_results[0][1].replace("```python", "").replace("```", "")
+    base_solution = (
+        performance_results[0][1].replace("```python", "").replace("```", "")
+    )
     callback_context.state[f"performance_results_{task_id}"] = performance_results
     callback_context.state[f"best_score_{task_id}"] = best_score
     callback_context.state[f"base_solution_{task_id}"] = base_solution
@@ -164,12 +187,14 @@ def rank_candidate_solutions(
     with open(f"{run_cwd}/train0_0.py", "w", encoding="utf-8") as f:
         f.write(base_solution)
     callback_context.state[f"merger_code_{task_id}_0"] = performance_results[0][1]
-    callback_context.state[f"merger_code_exec_result_{task_id}_0"] = performance_results[0][2]
+    callback_context.state[f"merger_code_exec_result_{task_id}_0"] = (
+        performance_results[0][2]
+    )
     return None
 
 
 def select_best_solution(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Selects the best solution."""
     workspace_dir = callback_context.state.get("workspace_dir", "")
@@ -191,7 +216,7 @@ def select_best_solution(
 
 
 def update_merger_states(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Updates merger states."""
     lower = callback_context.state.get("lower", True)
@@ -224,7 +249,7 @@ def update_merger_states(
 
 
 def prepare_task(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Prepares things for the task."""
     config_dict = dataclasses.asdict(config.CONFIG)
@@ -244,7 +269,7 @@ def prepare_task(
 
 
 def create_workspace(
-    callback_context: callback_context_module.CallbackContext
+    callback_context: callback_context_module.CallbackContext,
 ) -> Optional[types.Content]:
     """Creates workspace."""
     data_dir = callback_context.state.get("data_dir", "")
@@ -253,11 +278,14 @@ def create_workspace(
     task_id = callback_context.agent_name.split("_")[-1]
     run_cwd = os.path.join(workspace_dir, task_name, task_id)
     if os.path.exists(run_cwd):
-      shutil.rmtree(run_cwd)
+        shutil.rmtree(run_cwd)
     # make required directories
     os.makedirs(os.path.join(workspace_dir, task_name, task_id), exist_ok=True)
     os.makedirs(os.path.join(workspace_dir, task_name, task_id, "input"), exist_ok=True)
-    os.makedirs(os.path.join(workspace_dir, task_name, task_id, "model_candidates"), exist_ok=True)
+    os.makedirs(
+        os.path.join(workspace_dir, task_name, task_id, "model_candidates"),
+        exist_ok=True,
+    )
     # copy files to input directory
     files = os.listdir(os.path.join(data_dir, task_name))
     for file in files:
@@ -313,9 +341,11 @@ def get_merger_agent_instruction(
     performance_results = context.state.get(f"performance_results_{task_id}", [])
     base_solution = context.state.get(f"base_solution_{task_id}", "")
     if reference_idx < len(performance_results):
-        reference_solution = performance_results[reference_idx][1].replace(
-            "```python", ""
-        ).replace("```", "")
+        reference_solution = (
+            performance_results[reference_idx][1]
+            .replace("```python", "")
+            .replace("```", "")
+        )
     else:
         reference_solution = ""
     return prompt.CODE_INTEGRATION_INSTR.format(
