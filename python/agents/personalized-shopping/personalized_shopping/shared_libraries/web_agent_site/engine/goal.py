@@ -14,12 +14,14 @@
 
 """Functions for specifying goals and reward calculations."""
 
-from collections import defaultdict
 import itertools
 import random
-from rich import print
+from collections import defaultdict
+
 import spacy
+from rich import print
 from thefuzz import fuzz
+
 from .normalize import normalize_color
 
 nlp = spacy.load("en_core_web_sm")

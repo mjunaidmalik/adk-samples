@@ -14,13 +14,13 @@
 
 """ """
 
-from ast import literal_eval
-from collections import defaultdict
-from decimal import Decimal
 import json
 import os
 import random
 import re
+from ast import literal_eval
+from collections import defaultdict
+from decimal import Decimal
 
 from flask import render_template_string
 from pyserini.search.lucene import LuceneSearcher

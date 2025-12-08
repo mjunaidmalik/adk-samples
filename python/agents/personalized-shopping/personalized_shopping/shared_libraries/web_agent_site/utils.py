@@ -15,8 +15,8 @@
 import bisect
 import hashlib
 import logging
-from os.path import abspath, dirname, join
 import random
+from os.path import abspath, dirname, join
 
 BASE_DIR = dirname(abspath(__file__))
 DEBUG_PROD_SIZE = None  # set to `None` to disable

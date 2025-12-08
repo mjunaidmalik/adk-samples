@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import defaultdict
 import json
 import random
 import string
 import time
+from collections import defaultdict
+
+import gym
+import numpy as np
+import torch
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from flask import Flask
-import gym
 from gym.envs.registration import register
-import numpy as np
-import torch
+
 from ..engine.engine import (
     ACTION_TO_TEMPLATE,
     BACK_TO_SEARCH,
@@ -44,7 +46,6 @@ from ..utils import (
     FEAT_IDS,
     random_idx,
 )
-
 
 app = Flask(__name__)
 
