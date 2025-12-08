@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SAMPLE_REPORT="""
+SAMPLE_REPORT = """
 *****************************Sample Report Document Template***********
 Medical Pre-Authorization Request Report
 Date of Report: July 19, 2025

@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+import logging
+import os
+import warnings
+from pathlib import Path
+from typing import Optional
+
+import fitz
 import google.cloud.aiplatform as aiplatform
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from typing import Optional
-from dotenv import load_dotenv
-from pathlib import Path
-import warnings
-import os
-import logging
-import base64
-import fitz
 
-env_path = Path(__file__).parent.parent.parent.parent / '.env'
+env_path = Path(__file__).parent.parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 warnings.filterwarnings("ignore")
@@ -45,10 +46,10 @@ def extract_treatment_name(user_query: str) -> str:
     """
     # Initialize the Gemini model
     client = genai.Client(
-      vertexai=True,
-      project=GOOGLE_CLOUD_PROJECT,  
-      location=GOOGLE_CLOUD_LOCATION,           
-  )
+        vertexai=True,
+        project=GOOGLE_CLOUD_PROJECT,
+        location=GOOGLE_CLOUD_LOCATION,
+    )
 
     model = "gemini-2.5-flash"
 
@@ -63,32 +64,27 @@ def extract_treatment_name(user_query: str) -> str:
     """
 
     contents = [
-    types.Content(
-      role="user",
-      parts=[
-        types.Part.from_text(text=user_query)
-      ]
-    ),
+        types.Content(role="user", parts=[types.Part.from_text(text=user_query)]),
     ]
 
     generate_content_config = types.GenerateContentConfig(
-    temperature = 1,
-    top_p = 1,
-    seed = 0,
-    max_output_tokens = 65535,
-    system_instruction=[types.Part.from_text(text=si_text)],
-    thinking_config=types.ThinkingConfig(
-      thinking_budget=-1,
-    ),
+        temperature=1,
+        top_p=1,
+        seed=0,
+        max_output_tokens=65535,
+        system_instruction=[types.Part.from_text(text=si_text)],
+        thinking_config=types.ThinkingConfig(
+            thinking_budget=-1,
+        ),
     )
 
     generated_text = ""
     try:
         # Stream the content generation and concatenate chunks
         for chunk in client.models.generate_content_stream(
-        model = model,
-        contents = contents,
-        config = generate_content_config,
+            model=model,
+            contents=contents,
+            config=generate_content_config,
         ):
             generated_text += chunk.text
     except Exception as e:
@@ -96,6 +92,7 @@ def extract_treatment_name(user_query: str) -> str:
         return "Error generating response."
 
     return generated_text.strip()
+
 
 def extract_policy_information(policy_file: str, treatment_name: str) -> str:
     """
@@ -115,14 +112,12 @@ def extract_policy_information(policy_file: str, treatment_name: str) -> str:
         location=GOOGLE_CLOUD_LOCATION,
     )
 
-    
     # with open(policy_file_path, 'rb') as pdf_file:
     #     pdf_bytes = pdf_file.read()
 
-    
-
     # Define the text part of the prompt
-    prompt_text = types.Part.from_text(text=f"""
+    prompt_text = types.Part.from_text(
+        text=f"""
     You are an AI assistant specialized in analyzing insurance policy documents.
     Given the following insurance policy text, extract all details and clauses
     specifically related to the medical treatment named \"{treatment_name}"\.
@@ -132,22 +127,18 @@ def extract_policy_information(policy_file: str, treatment_name: str) -> str:
     If \"{treatment_name}"\ is not explicitly mentioned or no information
     is found regarding it, state \\\"No specific information found for {treatment_name}.
     
-    Insurance policy text: {policy_file}""")
+    Insurance policy text: {policy_file}"""
+    )
 
     model = "gemini-2.5-flash"
     contents = [
-        types.Content(
-            role="user",
-            parts=[
-                prompt_text
-            ]
-        ),
+        types.Content(role="user", parts=[prompt_text]),
     ]
 
     generate_content_config = types.GenerateContentConfig(
-        temperature = 1,
-        top_p = 0.95,
-        max_output_tokens = 65535,
+        temperature=1,
+        top_p=0.95,
+        max_output_tokens=65535,
         thinking_config=types.ThinkingConfig(
             thinking_budget=0,
         ),
@@ -156,9 +147,9 @@ def extract_policy_information(policy_file: str, treatment_name: str) -> str:
     summary_output = ""
     # Stream the content generation
     for chunk in client.models.generate_content_stream(
-        model = model,
-        contents = contents,
-        config = generate_content_config,
+        model=model,
+        contents=contents,
+        config=generate_content_config,
     ):
         summary_output += chunk.text
     return summary_output
@@ -181,31 +172,26 @@ def extract_medical_details(medical_report_file: str, treatment_name: str) -> st
         location=GOOGLE_CLOUD_LOCATION,
     )
 
-
     # Define the text part of the prompt
-    prompt_text = types.Part.from_text(text="""You are an AI assistant specialized in analyzing medical reports. 
+    prompt_text = types.Part.from_text(
+        text="""You are an AI assistant specialized in analyzing medical reports. 
     Given the following medical report txt, extract and summarize all relevant medical details specifically 
     related to the treatment named \"{treatment_name}\". Include information about diagnosis, treatment plans, 
     medications, procedures, and patient outcomes. If \"{treatment_name}\" is not explicitly mentioned or no
     information is found regarding it, state \\\"No specific information found for {treatment_name}.
     
-    Medical report text {medical_report_file}""")
-
+    Medical report text {medical_report_file}"""
+    )
 
     model = "gemini-2.5-flash"
     contents = [
-        types.Content(
-            role="user",
-            parts=[
-                prompt_text
-            ]
-        ),
+        types.Content(role="user", parts=[prompt_text]),
     ]
 
     generate_content_config = types.GenerateContentConfig(
-        temperature = 1,
-        top_p = 0.95,
-        max_output_tokens = 65535,
+        temperature=1,
+        top_p=0.95,
+        max_output_tokens=65535,
         thinking_config=types.ThinkingConfig(
             thinking_budget=0,
         ),
@@ -214,9 +200,9 @@ def extract_medical_details(medical_report_file: str, treatment_name: str) -> st
     summary_output = ""
     # Stream the content generation
     for chunk in client.models.generate_content_stream(
-        model = model,
-        contents = contents,
-        config = generate_content_config,
+        model=model,
+        contents=contents,
+        config=generate_content_config,
     ):
         summary_output += chunk.text
     return summary_output
