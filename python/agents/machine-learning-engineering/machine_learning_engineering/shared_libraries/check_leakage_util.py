@@ -55,7 +55,7 @@ def parse_leakage_status(text: str) -> tuple[str, str]:
     text = text[start_idx:end_idx]
     result = json.loads(text)[0]
     leakage_status = result["leakage_status"]
-    code_block = result["code_block"].replace(f"```python", "").replace("```", "")
+    code_block = result["code_block"].replace("```python", "").replace("```", "")
     return leakage_status, code_block
 
 
@@ -81,7 +81,7 @@ def update_extract_status(
             extract_status = True
         else:
             extract_status = code_block in code
-    except:
+    except Exception:
         code_block = ""
         extract_status = False
     extract_status_key = code_util.get_name_with_prefix_and_suffix(

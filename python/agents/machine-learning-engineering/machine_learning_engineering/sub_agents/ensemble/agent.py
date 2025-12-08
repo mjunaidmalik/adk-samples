@@ -83,7 +83,9 @@ def get_init_ensemble_plan_agent_instruction(
     python_solutions = []
     for task_id in range(1, num_solutions + 1):
         code = context.state.get(f"train_code_{outer_loop_round}_{task_id}", "")
-        formatted_str = f"# Python Solution {task_id}\n```python\n{code}\n```\n"
+        formatted_str = "# Python Solution {}\n```python\n{}\n```\n".format(
+            task_id, code
+        )
         python_solutions.append(formatted_str)
     instruction = prompt.INIT_ENSEMBLE_PLAN_INSTR.format(
         num_solutions=num_solutions,
@@ -119,7 +121,9 @@ def get_ensemble_plan_refinement_instruction(
     python_solutions = []
     for task_id in range(1, num_solutions + 1):
         code = context.state.get(f"train_code_{outer_loop_round}_{task_id}", "")
-        formatted_str = f"# Python Solution {task_id}\n```python\n{code}\n```\n"
+        formatted_str = "# Python Solution {}\n```python\n{}\n```\n".format(
+            task_id, code
+        )
         python_solutions.append(formatted_str)
     return prompt.ENSEMBLE_PLAN_REFINE_INSTR.format(
         num_solutions=num_solutions,
@@ -138,9 +142,11 @@ def get_ensemble_plan_implement_agent_instruction(
     python_solutions = []
     for task_id in range(1, num_solutions + 1):
         code = context.state.get(f"train_code_{outer_loop_round}_{task_id}", "")
-        formatted_str = f"# Python Solution {task_id}\n```python\n{code}\n```\n"
+        formatted_str = "# Python Solution {}\n```python\n{}\n```\n".format(
+            task_id, code
+        )
         python_solutions.append(formatted_str)
-    prev_plans = context.state.get(f"ensemble_plans", [""])
+    prev_plans = context.state.get("ensemble_plans", [""])
     return prompt.ENSEMBLE_PLAN_IMPLEMENT_INSTR.format(
         num_solutions=num_solutions,
         python_solutions="\n".join(python_solutions),

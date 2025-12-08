@@ -38,22 +38,22 @@ def get_model_candidates(
         models = ast.literal_eval(result)[:num_model_candidates]
         for j, model in enumerate(models):
             model_description = ""
-            model_description += f"## Model name\n"
+            model_description += "## Model name\n"
             model_description += model["model_name"]
             model_description += "\n\n"
-            model_description += f"## Example Python code\n"
+            model_description += "## Example Python code\n"
             model_description += model["example_code"]
-            callback_context.state[f"init_{task_id}_model_{j+1}"] = {
+            callback_context.state[f"init_{task_id}_model_{j + 1}"] = {
                 "model_name": model["model_name"],
                 "example_code": model["example_code"],
                 "model_description": model_description,
             }
             with open(
-                os.path.join(run_cwd, "model_candidates", f"model_{j+1}.txt"), "w"
+                os.path.join(run_cwd, "model_candidates", f"model_{j + 1}.txt"), "w"
             ) as f:
                 f.write(model_description)
         callback_context.state[f"init_{task_id}_model_finish"] = True
-    except:
+    except Exception:
         return None
     return None
 
@@ -382,7 +382,7 @@ init_parallel_sub_agents = []
 for k in range(config.CONFIG.num_solutions):
     model_retriever_agent = agents.Agent(
         model=config.CONFIG.agent_model,
-        name=f"model_retriever_agent_{k+1}",
+        name=f"model_retriever_agent_{k + 1}",
         description="Retrieve effective models for solving a given task.",
         instruction=get_model_retriever_agent_instruction,
         tools=[google_search],
@@ -394,7 +394,7 @@ for k in range(config.CONFIG.num_solutions):
         include_contents="none",
     )
     model_retriever_loop_agent = agents.LoopAgent(
-        name=f"model_retriever_loop_agent_{k+1}",
+        name=f"model_retriever_loop_agent_{k + 1}",
         description="Retrieve effective models until it succeeds.",
         sub_agents=[model_retriever_agent],
         max_iterations=config.CONFIG.max_retry,
@@ -402,31 +402,31 @@ for k in range(config.CONFIG.num_solutions):
     init_solution_gen_sub_agents = [
         model_retriever_loop_agent,
     ]
-    for l in range(config.CONFIG.num_model_candidates):
+    for model_idx in range(config.CONFIG.num_model_candidates):
         model_eval_and_debug_loop_agent = debug_util.get_run_and_debug_agent(
             prefix="model_eval",
-            suffix=f"{k+1}_{l+1}",
+            suffix=f"{k + 1}_{model_idx + 1}",
             agent_description="Generate a code using the given model",
             instruction_func=get_model_eval_agent_instruction,
             before_model_callback=check_model_eval_finish,
         )
         init_solution_gen_sub_agents.append(model_eval_and_debug_loop_agent)
     rank_agent = agents.SequentialAgent(
-        name=f"rank_agent_{k+1}",
+        name=f"rank_agent_{k + 1}",
         description="Rank the solutions based on the scores.",
         before_agent_callback=rank_candidate_solutions,
     )
     init_solution_gen_sub_agents.append(rank_agent)
-    for l in range(1, config.CONFIG.num_model_candidates):
+    for merge_idx in range(1, config.CONFIG.num_model_candidates):
         merge_and_debug_loop_agent = debug_util.get_run_and_debug_agent(
             prefix="merger",
-            suffix=f"{k+1}_{l}",
+            suffix=f"{k + 1}_{merge_idx}",
             agent_description="Integrate two solutions into a single solution",
             instruction_func=get_merger_agent_instruction,
             before_model_callback=check_merger_finish,
         )
         merger_states_update_agent = agents.SequentialAgent(
-            name=f"merger_states_update_agent_{k+1}_{l}",
+            name=f"merger_states_update_agent_{k + 1}_{merge_idx}",
             description="Updates the states after merging.",
             before_agent_callback=update_merger_states,
         )
@@ -437,7 +437,7 @@ for k in range(config.CONFIG.num_solutions):
             ]
         )
     selection_agent = agents.SequentialAgent(
-        name=f"selection_agent_{k+1}",
+        name=f"selection_agent_{k + 1}",
         description="Select the best solution.",
         before_agent_callback=select_best_solution,
     )
@@ -445,14 +445,14 @@ for k in range(config.CONFIG.num_solutions):
     if config.CONFIG.use_data_usage_checker:
         check_data_use_and_debug_loop_agent = debug_util.get_run_and_debug_agent(
             prefix="check_data_use",
-            suffix=f"{k+1}",
+            suffix=f"{k + 1}",
             agent_description="Check if all the provided information is used",
             instruction_func=get_check_data_use_instruction,
             before_model_callback=skip_data_use_check,
         )
         init_solution_gen_sub_agents.append(check_data_use_and_debug_loop_agent)
     init_solution_gen_agent = agents.SequentialAgent(
-        name=f"init_solution_gen_agent_{k+1}",
+        name=f"init_solution_gen_agent_{k + 1}",
         description="Generate an initial solutions for the given task.",
         sub_agents=init_solution_gen_sub_agents,
         before_agent_callback=create_workspace,

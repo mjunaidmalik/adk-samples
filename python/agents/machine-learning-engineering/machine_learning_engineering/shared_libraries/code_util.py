@@ -253,7 +253,7 @@ def evaluate_code(
                 try:
                     score = extract_performance_from_text(result_dict.get("stdout", ""))
                     score = float(score)
-                except:
+                except Exception:
                     score = 1e9 if lower else 0
             else:
                 score = 1e9 if lower else 0

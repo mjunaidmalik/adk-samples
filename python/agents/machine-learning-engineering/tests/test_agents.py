@@ -7,14 +7,13 @@ import unittest
 
 import dotenv
 import pytest
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from google.adk.artifacts import InMemoryArtifactService
-from google.adk.runners import InMemoryRunner, Runner
+from google.adk.runners import InMemoryRunner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from machine_learning_engineering.agent import root_agent
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 session_service = InMemorySessionService()
 artifact_service = InMemoryArtifactService()
