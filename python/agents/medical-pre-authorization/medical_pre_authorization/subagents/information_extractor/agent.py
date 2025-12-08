@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google import genai
 from google.adk.agents import Agent
 from google.genai import types
 
@@ -27,7 +26,7 @@ information_extractor = Agent(
     model="gemini-2.5-flash",
     name="information_extractor",
     description="""Agent that extracts the details on user insurance policy and
-   medical necessity for a pre-authorization request from documents provided 
+   medical necessity for a pre-authorization request from documents provided
    by the user.""",
     instruction=INFORMATION_EXTRACTOR_INSTRUCTION,
     generate_content_config=types.GenerateContentConfig(temperature=0.2),

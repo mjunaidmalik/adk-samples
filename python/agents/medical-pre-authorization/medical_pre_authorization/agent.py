@@ -23,7 +23,7 @@ from .subagents.information_extractor import information_extractor
 root_agent = Agent(
     model="gemini-2.5-flash",
     name="root_agent",
-    description="""As a medical pre-authorization agent, you process user 
+    description="""As a medical pre-authorization agent, you process user
    pre-auth request for a treatment.""",
     instruction=AGENT_INSTRUCTION,
     generate_content_config=types.GenerateContentConfig(temperature=0.2),
