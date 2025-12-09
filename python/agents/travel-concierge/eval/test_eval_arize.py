@@ -4,7 +4,6 @@ Arize-based evaluation suite for the Travel Concierge agent.
 This follows the Arize documentation pattern for experiments while using Google Vertex AI for evaluations.
 """
 
-import asyncio
 import json
 import os
 import time
@@ -36,7 +35,6 @@ from phoenix.evals import GeminiModel, llm_classify
 
 # Import the travel concierge agent
 from travel_concierge.agent import root_agent
-from vertexai.preview.evaluation import EvalTask
 
 load_dotenv()
 
@@ -457,15 +455,6 @@ def run_evaluation_experiment():
 
         # First, run the agent tasks to get responses
         # We'll collect the results manually for Phoenix evaluation
-        test_data = load_test_data(
-            test_files[
-                next(
-                    i for i, (name, _) in enumerate(test_files) if name == dataset_name
-                )
-            ][1]
-        )
-        dataset_rows = extract_conversation_data(test_data)
-
         # Use the 3 separate named evaluator functions
         evaluators = [
             agent_handoff_evaluator,
