@@ -16,11 +16,10 @@
 import logging
 from typing import Literal, Optional
 
+from content_gen_agent.utils.evaluation_prompts import get_image_evaluation_prompt
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
-
-from content_gen_agent.utils.evaluation_prompts import get_image_evaluation_prompt
 
 # --- Configuration ---
 logging.basicConfig(

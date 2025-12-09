@@ -57,9 +57,7 @@ def _get_storyline_schema(num_images: int) -> List[Dict]:
 
     schema = []
     if num_images > 1:
-        schema.append(
-            {"name": "before", "generate": True, "step": 0, "duration": 3}
-        )
+        schema.append({"name": "before", "generate": True, "step": 0, "duration": 3})
 
     for i in range(num_images - 2):
         schema.append(
@@ -275,9 +273,7 @@ async def combine(
             gcs_uri = _upload_to_gcs(video_bytes, filename)
             await tool_context.save_artifact(
                 filename,
-                genai.types.Part.from_bytes(
-                    data=video_bytes, mime_type="video/mp4"
-                ),
+                genai.types.Part.from_bytes(data=video_bytes, mime_type="video/mp4"),
             )
 
             result = {"name": filename}

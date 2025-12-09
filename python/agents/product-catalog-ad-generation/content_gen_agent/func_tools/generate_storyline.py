@@ -19,23 +19,19 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
+from content_gen_agent.func_tools.select_product import select_product_from_bq
+from content_gen_agent.utils.evaluate_media import (
+    calculate_evaluation_score,
+    evaluate_media,
+)
+from content_gen_agent.utils.images import IMAGE_MIME_TYPE, _load_gcs_image
+from content_gen_agent.utils.storytelling import STORYTELLING_INSTRUCTIONS
 from dotenv import load_dotenv
 from google import genai
 from google.adk.tools import ToolContext
 from google.cloud import storage
 from google.genai import types
 from google.genai.types import HarmBlockThreshold, HarmCategory
-
-from content_gen_agent.utils.storytelling import STORYTELLING_INSTRUCTIONS
-from content_gen_agent.func_tools.select_product import select_product_from_bq
-from content_gen_agent.utils.evaluate_media import (
-    calculate_evaluation_score,
-    evaluate_media,
-)
-from content_gen_agent.utils.images import (
-    IMAGE_MIME_TYPE,
-    _load_gcs_image
-)
 
 # Configure logging
 logging.basicConfig(
@@ -128,12 +124,11 @@ async def generate_storyline(
         storage_client = storage.Client()
         if user_provided_asset_sheet_gcs_uri.startswith("gs://"):
             user_provided_asset_sheet_gcs_uri = user_provided_asset_sheet_gcs_uri[5:]
-        image_part = await _load_gcs_image(user_provided_asset_sheet_gcs_uri, storage_client)
-        asset_sheet_filename = "asset_sheet.png"
-        await tool_context.save_artifact(
-            asset_sheet_filename,
-            image_part
+        image_part = await _load_gcs_image(
+            user_provided_asset_sheet_gcs_uri, storage_client
         )
+        asset_sheet_filename = "asset_sheet.png"
+        await tool_context.save_artifact(asset_sheet_filename, image_part)
         logging.info(f"Saved user-provided asset sheet image to {asset_sheet_filename}")
 
     story_data = _generate_storyline_text(
@@ -146,7 +141,6 @@ async def generate_storyline(
     )
     if "error" in story_data:
         return {"status": "failed", "detail": story_data["error"]}
-
 
     # Generate the asset sheet from scratch using the generated storyline text
     if not user_provided_asset_sheet_gcs_uri:
@@ -247,15 +241,11 @@ def _generate_storyline_text(
         response = client.models.generate_content(
             model=STORYLINE_MODEL,
             contents=contents,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            ),
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         if response.text:
             story_data = json.loads(response.text)
-            logging.info(
-                "Successfully generated storyline and visual style guide."
-            )
+            logging.info("Successfully generated storyline and visual style guide.")
             return story_data
         return {"error": "Received an empty response from the model."}
     except Exception as e:
@@ -289,13 +279,20 @@ async def _ensure_product_photo_artifact(
                 product_photo_part = await _load_gcs_image(gcs_uri, storage_client)
                 if product_photo_part:
                     artifact_filename = gcs_uri.split("/")[-1]
-                    await tool_context.save_artifact(artifact_filename, product_photo_part)
-                    logging.info(f"Saved product photo from GCS URI '{gcs_uri}' as artifact '{artifact_filename}'")
+                    await tool_context.save_artifact(
+                        artifact_filename, product_photo_part
+                    )
+                    logging.info(
+                        f"Saved product photo from GCS URI '{gcs_uri}' as artifact '{artifact_filename}'"
+                    )
                     return artifact_filename
                 else:
                     raise ValueError("Failed to load image from GCS.")
             except Exception as e:
-                logging.warning(f"Failed to process GCS URI '{product_photo_filename}': {e}. Will attempt to fetch from BigQuery.", exc_info=True)
+                logging.warning(
+                    f"Failed to process GCS URI '{product_photo_filename}': {e}. Will attempt to fetch from BigQuery.",
+                    exc_info=True,
+                )
         else:
             try:
                 # Verify the artifact exists by trying to load it.
@@ -329,10 +326,14 @@ async def _ensure_product_photo_artifact(
             data=image_bytes, mime_type=IMAGE_MIME_TYPE
         )
         await tool_context.save_artifact(artifact_filename, product_photo_part)
-        logging.info(f"Saved product photo '{gcs_uri}' as artifact '{artifact_filename}'")
+        logging.info(
+            f"Saved product photo '{gcs_uri}' as artifact '{artifact_filename}'"
+        )
         return artifact_filename
     except Exception as e:
-        logging.error(f"Failed to download or save product photo from GCS: {e}", exc_info=True)
+        logging.error(
+            f"Failed to download or save product photo from GCS: {e}", exc_info=True
+        )
         return None
 
 
@@ -371,15 +372,11 @@ async def _call_image_generation_api(
                         "mime_type": IMAGE_MIME_TYPE,
                     }
     except Exception as e:
-        logging.error(
-            f"Error calling image generation API: {e}", exc_info=True
-        )
+        logging.error(f"Error calling image generation API: {e}", exc_info=True)
     return {}
 
 
-def _process_visual_style_guide(
-    visual_style_guide: Dict[str, Any]
-) -> Dict[str, str]:
+def _process_visual_style_guide(visual_style_guide: Dict[str, Any]) -> Dict[str, str]:
     """Processes the visual style guide into formatted strings.
 
     Args:
@@ -405,9 +402,11 @@ def _process_visual_style_guide(
     return {
         "asset_sheet": format_list(asset_sheet_items),
         "characters": ". ".join(
-            f"{item.get('name', '')}: {item.get('description', '')}"
-            if isinstance(item, dict)
-            else str(item)
+            (
+                f"{item.get('name', '')}: {item.get('description', '')}"
+                if isinstance(item, dict)
+                else str(item)
+            )
             for item in characters
         ),
         "locations": format_list(locations),
@@ -450,9 +449,7 @@ async def _generate_asset_sheet_image(
 
     try:
         contents = [image_prompt]
-        product_photo_part = await tool_context.load_artifact(
-            product_photo_filename
-        )
+        product_photo_part = await tool_context.load_artifact(product_photo_filename)
         if product_photo_part:
             contents.append(product_photo_part)
     except Exception as e:
@@ -466,14 +463,11 @@ async def _generate_asset_sheet_image(
         }
 
     tasks = [
-        _call_image_generation_api(contents, image_prompt)
-        for _ in range(MAX_RETRIES)
+        _call_image_generation_api(contents, image_prompt) for _ in range(MAX_RETRIES)
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    generation_attempts = [
-        res for res in results if isinstance(res, dict) and res
-    ]
+    generation_attempts = [res for res in results if isinstance(res, dict) and res]
     if not generation_attempts:
         return {
             "status": "failed",
@@ -502,6 +496,7 @@ async def _generate_asset_sheet_image(
 
     return asset_sheet_filename
 
+
 async def _save_json_artifact(
     tool_context: ToolContext, name: str, data: Dict[str, Any]
 ) -> str:
@@ -522,4 +517,3 @@ async def _save_json_artifact(
     await tool_context.save_artifact(filename, part)
     logging.info(f"Saved {name} to artifacts as {filename}")
     return filename
-

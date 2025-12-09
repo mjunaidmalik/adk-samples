@@ -15,14 +15,17 @@ import argparse
 import json
 import os
 import sys
-from google.cloud import bigquery, storage
+from typing import List
+
 from google import genai
+from google.cloud import bigquery, storage
 from google.genai import types
 from pydantic import BaseModel
-from typing import List
+
 
 class Product(BaseModel):
     """Represents a single product record for BigQuery."""
+
     product_id: str
     product_name: str
     description: str
@@ -31,9 +34,12 @@ class Product(BaseModel):
     search_tags: List[str]
     last_updated: str
 
+
 class ProductList(BaseModel):
     """A list of products."""
+
     products: List[Product]
+
 
 def list_gcs_files(bucket_name, prefix):
     """Lists all files in a GCS bucket with a given prefix."""
@@ -41,6 +47,7 @@ def list_gcs_files(bucket_name, prefix):
     bucket = storage_client.bucket(bucket_name)
     blobs = bucket.list_blobs(prefix=prefix)
     return [f"gs://{bucket_name}/{blob.name}" for blob in blobs]
+
 
 def generate_bq_data(project_id, region, product_files, schema):
     """Generates BigQuery data using Gemini based on a predefined schema."""
@@ -76,22 +83,28 @@ def generate_bq_data(project_id, region, product_files, schema):
     """
 
     response = client.models.generate_content(
-            model="gemini-2.5-pro",
-            contents=[prompt],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=ProductList,
-            ),
-        )
+        model="gemini-2.5-pro",
+        contents=[prompt],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ProductList,
+        ),
+    )
     # The response is expected to be a JSON array of records, so we load it directly.
     return json.loads(response.text)["products"]
+
 
 def create_and_populate_bq_table(project_id, dataset_id, table_id, schema_fields, data):
     """Creates and populates a BigQuery table."""
     client = bigquery.Client(project=project_id)
     table_ref = client.dataset(dataset_id).table(table_id)
 
-    schema = [bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "NULLABLE")) for field in schema_fields]
+    schema = [
+        bigquery.SchemaField(
+            field["name"], field["type"], mode=field.get("mode", "NULLABLE")
+        )
+        for field in schema_fields
+    ]
 
     try:
         table = client.get_table(table_ref)
@@ -103,7 +116,9 @@ def create_and_populate_bq_table(project_id, dataset_id, table_id, schema_fields
         print(f"Table {table_id} created.")
 
     # Check if the table is empty
-    query_job = client.query(f"SELECT COUNT(*) FROM `{project_id}.{dataset_id}.{table_id}`")
+    query_job = client.query(
+        f"SELECT COUNT(*) FROM `{project_id}.{dataset_id}.{table_id}`"
+    )
     results = query_job.result()
     row_count = next(results)[0]
 
@@ -121,8 +136,11 @@ def create_and_populate_bq_table(project_id, dataset_id, table_id, schema_fields
     else:
         print("Data inserted successfully.")
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Populate BigQuery table using Gemini.")
+    parser = argparse.ArgumentParser(
+        description="Populate BigQuery table using Gemini."
+    )
     parser.add_argument("--project_id", required=True, help="GCP Project ID")
     parser.add_argument("--bucket_name", required=True, help="GCS Bucket Name")
     parser.add_argument("--dataset_id", required=True, help="BigQuery Dataset ID")
@@ -146,8 +164,13 @@ def main():
         {"name": "last_updated", "type": "TIMESTAMP"},
     ]
 
-    generated_data = generate_bq_data(args.project_id, args.region, product_files, schema_fields)
-    create_and_populate_bq_table(args.project_id, args.dataset_id, args.table_id, schema_fields, generated_data)
+    generated_data = generate_bq_data(
+        args.project_id, args.region, product_files, schema_fields
+    )
+    create_and_populate_bq_table(
+        args.project_id, args.dataset_id, args.table_id, schema_fields, generated_data
+    )
+
 
 if __name__ == "__main__":
     main()

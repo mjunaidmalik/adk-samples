@@ -22,7 +22,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from google import genai
 from google.adk.tools import ToolContext
 from google.cloud import storage
-from google.genai.types import GenerateVideosConfig, Image as GenImage
+from google.genai.types import GenerateVideosConfig
+from google.genai.types import Image as GenImage
 
 # --- Configuration ---
 logging.basicConfig(
@@ -206,7 +207,9 @@ async def _load_image_bytes(
 
     if source_type == "artifact":
         artifact = await tool_context.load_artifact(source_path)
-        image_bytes = artifact.inline_data.data if artifact and artifact.inline_data else None
+        image_bytes = (
+            artifact.inline_data.data if artifact and artifact.inline_data else None
+        )
     else:
         gcs_uri = source_path[5:] if source_path.startswith("gs://") else source_path
         bucket_name, blob_name = gcs_uri.split("/", 1)
@@ -267,7 +270,9 @@ async def generate_video(
                 source_type, source_path, tool_context
             )
             if not image_bytes:
-                failed_videos.append({"source": source_path, "reason": "Could not load image"})
+                failed_videos.append(
+                    {"source": source_path, "reason": "Could not load image"}
+                )
                 continue
 
             duration = 6 if logo_prompt_present and i == len(image_sources) - 1 else 4
@@ -292,13 +297,18 @@ async def generate_video(
                 successful_videos.append(res)
             else:
                 failed_videos.append(
-                    {"source": image_sources[i][1], "reason": error or "Generation failed"}
+                    {
+                        "source": image_sources[i][1],
+                        "reason": error or "Generation failed",
+                    }
                 )
 
     successful_videos.sort(
-        key=lambda v: int(re.match(r"(\d+)", v["name"]).group(1))
-        if re.match(r"(\d+)", v["name"])
-        else -1
+        key=lambda v: (
+            int(re.match(r"(\d+)", v["name"]).group(1))
+            if re.match(r"(\d+)", v["name"])
+            else -1
+        )
     )
 
     return {

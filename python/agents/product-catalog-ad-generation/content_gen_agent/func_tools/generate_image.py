@@ -20,6 +20,11 @@ import os
 from typing import Any, Dict, List, Optional
 
 import vertexai
+from content_gen_agent.utils.evaluate_media import (
+    calculate_evaluation_score,
+    evaluate_media,
+)
+from content_gen_agent.utils.images import IMAGE_MIME_TYPE, _load_gcs_image
 from dotenv import load_dotenv
 from google import genai
 from google.adk.tools import ToolContext
@@ -27,15 +32,6 @@ from google.cloud import storage
 from google.genai import types
 from google.genai.types import HarmBlockThreshold, HarmCategory
 from vertexai.preview.vision_models import ImageGenerationModel
-
-from content_gen_agent.utils.evaluate_media import (
-    calculate_evaluation_score,
-    evaluate_media,
-)
-from content_gen_agent.utils.images import (
-    IMAGE_MIME_TYPE,
-    _load_gcs_image
-)
 
 # --- Configuration ---
 logging.basicConfig(
@@ -164,9 +160,7 @@ async def _call_gemini_image_api(
     return {}
 
 
-async def _call_imagen_api(
-    prompt: str, filename_prefix: str
-) -> Dict[str, Any]:
+async def _call_imagen_api(prompt: str, filename_prefix: str) -> Dict[str, Any]:
     """Calls the Imagen 4 image generation API.
 
     Args:
@@ -225,9 +219,7 @@ async def generate_one_image(
         return await _call_imagen_api(prompt, filename_prefix)
 
     contents = [prompt, *input_images]
-    tasks = [
-        _call_gemini_image_api(contents, prompt) for _ in range(MAX_RETRIES)
-    ]
+    tasks = [_call_gemini_image_api(contents, prompt) for _ in range(MAX_RETRIES)]
     results = await asyncio.gather(*tasks)
     successful_attempts = [res for res in results if res]
 
@@ -282,9 +274,7 @@ async def generate_images_from_storyline(
     """
     if not client:
         return [
-            json.dumps(
-                {"status": "failed", "detail": "Gemini client not initialized."}
-            )
+            json.dumps({"status": "failed", "detail": "Gemini client not initialized."})
         ]
 
     storage_client = storage.Client()
@@ -300,9 +290,7 @@ async def generate_images_from_storyline(
         ]
 
     try:
-        asset_sheet_image = await tool_context.load_artifact(
-            ASSET_SHEET_FILENAME
-        )
+        asset_sheet_image = await tool_context.load_artifact(ASSET_SHEET_FILENAME)
         if not asset_sheet_image:
             raise ValueError("Asset sheet artifact is empty.")
     except Exception as e:
@@ -329,15 +317,13 @@ async def generate_images_from_storyline(
         filename_prefix = f"{scene_num}_"
 
         if is_logo_scene:
-            logo_prompt = f"Place the company logo centered on the following background: {prompt}"
-            tasks.append(
-                generate_one_image(logo_prompt, [logo_image], filename_prefix)
+            logo_prompt = (
+                f"Place the company logo centered on the following background: {prompt}"
             )
+            tasks.append(generate_one_image(logo_prompt, [logo_image], filename_prefix))
         else:
             tasks.append(
-                generate_one_image(
-                    prompt, [asset_sheet_image], filename_prefix
-                )
+                generate_one_image(prompt, [asset_sheet_image], filename_prefix)
             )
 
     results = await asyncio.gather(*tasks)
@@ -351,9 +337,7 @@ async def generate_images_from_storyline(
             save_tasks.append(
                 tool_context.save_artifact(
                     filename,
-                    types.Part.from_bytes(
-                        data=image_bytes, mime_type=IMAGE_MIME_TYPE
-                    ),
+                    types.Part.from_bytes(data=image_bytes, mime_type=IMAGE_MIME_TYPE),
                 )
             )
             result["detail"] = f"Image stored as {filename}."

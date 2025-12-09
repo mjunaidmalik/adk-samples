@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+
 from PIL import Image
+
 
 def add_padding_to_image(input_path, output_path):
     """
@@ -47,6 +49,7 @@ def add_padding_to_image(input_path, output_path):
     except Exception as e:
         print(f"Error processing {input_path}: {e}")
 
+
 def process_images_in_folder(input_folder, output_folder):
     """
     Processes all images in the input folder and saves them to the output folder.
@@ -55,11 +58,12 @@ def process_images_in_folder(input_folder, output_folder):
         os.makedirs(output_folder)
 
     for filename in os.listdir(input_folder):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+        if filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif")):
             input_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, filename)
             add_padding_to_image(input_path, output_path)
             print(f"Processed {filename}")
+
 
 if __name__ == "__main__":
     input_folder = "static/uploads/products"

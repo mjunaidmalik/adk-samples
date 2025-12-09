@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from google.cloud import storage
-from google.genai import types
 import logging
 from typing import Optional
+
+from google.cloud import storage
+from google.genai import types
 
 # --- Configuration ---
 logging.basicConfig(
@@ -22,6 +23,7 @@ logging.basicConfig(
 )
 
 IMAGE_MIME_TYPE = "image/png"
+
 
 async def _load_gcs_image(
     gcs_uri: str, storage_client: storage.Client
@@ -43,5 +45,3 @@ async def _load_gcs_image(
     except Exception as e:
         logging.error(f"Failed to load image from '{gcs_uri}': {e}")
         return None
-
-

@@ -78,9 +78,7 @@ async def _send_google_api_request(
                     else:
                         raise e
     except Exception as e:
-        logging.error(
-            f"Request to {api_endpoint} failed: {e}", exc_info=True
-        )
+        logging.error(f"Request to {api_endpoint} failed: {e}", exc_info=True)
     return None
 
 
@@ -158,9 +156,7 @@ async def _generate_voiceover_content(
         )
         return response.audio_content
     except Exception as e:
-        logging.error(
-            f"Failed to generate voiceover content: {e}", exc_info=True
-        )
+        logging.error(f"Failed to generate voiceover content: {e}", exc_info=True)
         return None
 
 
