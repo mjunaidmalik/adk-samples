@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-STORYTELLING_INSTRUCTIONS: str = f"""The following template is designed to guide your generation process for tasks like creating storyboards, generating keyframe images, and animating video sequences.
+STORYTELLING_INSTRUCTIONS: str = """The following template is designed to guide your generation process for tasks like creating storyboards, generating keyframe images, and animating video sequences.
 
 ### **Universal Cinematic Scene Generation Template**
 

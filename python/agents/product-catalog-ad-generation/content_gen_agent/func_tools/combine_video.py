@@ -13,7 +13,6 @@
 # limitations under the License.
 """Combines video clips, audio, and voiceovers into a final video."""
 
-import asyncio
 import datetime
 import logging
 import os
@@ -45,10 +44,8 @@ GCS_VIDEO_FOLDER = "videos"
 
 def _get_storyline_schema(num_images: int) -> List[Dict]:
     """Generates a storyline schema with a dynamic number of scenes.
-
     Args:
         num_images (int): The total number of images in the storyline.
-
     Returns:
         A list of dictionaries, where each dictionary defines a scene.
     """
@@ -62,7 +59,7 @@ def _get_storyline_schema(num_images: int) -> List[Dict]:
     for i in range(num_images - 2):
         schema.append(
             {
-                "name": f"showcase_{i+1}",
+                "name": f"showcase_{i + 1}",
                 "generate": True,
                 "step": i + 1,
                 "duration": 3,

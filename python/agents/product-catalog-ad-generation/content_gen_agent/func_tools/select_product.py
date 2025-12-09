@@ -32,7 +32,7 @@ def select_product_from_bq(product_name: str) -> dict:
     table_id = "media_assets"
 
     client = bigquery.Client()
-    table_ref = client.dataset(dataset_id).table(table_id)
+    # table_ref = client.dataset(dataset_id).table(table_id)
 
     # Normalize the product name for consistent searching.
     normalized_product_name = product_name.lower().strip()

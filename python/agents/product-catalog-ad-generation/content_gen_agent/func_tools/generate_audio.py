@@ -17,9 +17,9 @@ import asyncio
 import base64
 import logging
 import os
-import re
+import re  # noqa: F401
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # noqa: F401
 
 import aiohttp
 import google.auth
