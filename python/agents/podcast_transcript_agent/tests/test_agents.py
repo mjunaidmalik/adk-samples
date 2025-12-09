@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+from pathlib import Path
+
+import dotenv
 import pytest
 from google.adk.runners import InMemoryRunner
-from podcast_transcript_agent.agent import podcast_transcript_agent
-from pathlib import Path
 from google.genai import types
-import dotenv
-import json
+from podcast_transcript_agent.agent import podcast_transcript_agent
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -46,9 +47,7 @@ async def test_run_with_txt():
                 )
             ),
             types.Part(
-                inline_data=types.Blob(
-                    mime_type="text/plain", data=file_content
-                )
+                inline_data=types.Blob(mime_type="text/plain", data=file_content)
             ),
         ]
     )
@@ -75,6 +74,4 @@ async def test_run_with_txt():
                             if data["metadata"]["duration_seconds"] > 0:
                                 found_valid_transcript = True
 
-    assert (
-        found_valid_transcript
-    ), "No final event found with valid transcript metadata"
+    assert found_valid_transcript, "No final event found with valid transcript metadata"
